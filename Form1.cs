@@ -39,15 +39,30 @@ namespace WeatherAPI
             GetWeatherDetails();
         }
 
-
-        public void GetCityCoordinates(string _cityName)
+        public string LinkCoord(double lat, double lon)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://api.openweathermap.org/geo/1.0/direct?q=" + _cityName + "&appid=" + APIKey);
+            return "https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon=" + lon + "&appid=" + APIKey + "&units=metric";
+        }
+        public string LinkCity(string cityName)
+        {
+
+            return "http://api.openweathermap.org/geo/1.0/direct?q=" + cityName + "&appid=" + APIKey;
+        }
+
+        public string TextRespose(string url)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream stream = response.GetResponseStream();
             StreamReader reader = new StreamReader(stream);
             string data = reader.ReadToEnd();
             response.Close();
+            return data;
+        }
+
+        public void GetCityCoordinates(string _cityName)
+        {
+            string data = TextRespose(LinkCity(_cityName));
 
             List<GetCityCoordinates> coord = JsonSerializer.Deserialize<List<GetCityCoordinates>>(data);
             if (coord.Count < 1)
@@ -64,30 +79,27 @@ namespace WeatherAPI
 
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.openweathermap.org/data/2.5/weather?lat=" + Latitude + "&lon=" + Longtitude + "&appid=" + APIKey + "&units=metric");
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                Stream stream = response.GetResponseStream();
-                StreamReader reader = new StreamReader(stream);
-                string data = reader.ReadToEnd();
-                response.Close();
+                string data = TextRespose(LinkCoord(Latitude, Longtitude));
                 GetWeather weatherForecast = JsonSerializer.Deserialize<GetWeather>(data);
-                textBox_Weather.Text = "Country: " + weatherForecast.sys.country + "\r\n" +
-                "City: " + weatherForecast.name + "\r\n" +
-                "Weather: " + weatherForecast.weather[0].main + "\r\n" +
-                "Average Temp,把: " + weatherForecast.main.temp + "\r\n" +
-                "Max Temp,把: " + weatherForecast.main.temp_max + "\r\n" +
-                "Min Temp,把: " + weatherForecast.main.temp_min + "\r\n" +
-                "Temp feel,把: " + weatherForecast.main.feels_like + "\r\n" +
-                "Wind speed, metr/sec: " + weatherForecast.wind.speed;
+                OutputWeaherDetails(weatherForecast);
             }
             catch (Exception ex)
             {
                 textBox_Weather.Text = "Can't find this city";
                 return;
             }
+        }
 
-
-
+        public void OutputWeaherDetails(GetWeather forecast)
+        {
+            textBox_Weather.Text = "Country: " + forecast.sys.country + "\r\n" +
+            "City: " + forecast.name + "\r\n" +
+            "Weather: " + forecast.weather[0].main + "\r\n" +
+            "Average Temp,把: " + forecast.main.temp + "\r\n" +
+            "Max Temp,把: " + forecast.main.temp_max + "\r\n" +
+            "Min Temp,把: " + forecast.main.temp_min + "\r\n" +
+            "Temp feel,把: " + forecast.main.feels_like + "\r\n" +
+            "Wind speed, metr/sec: " + forecast.wind.speed;
         }
 
         private void textBox_lat_Validating(object sender, System.ComponentModel.CancelEventArgs e)
