@@ -53,10 +53,12 @@ namespace WeatherAPI
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            Stream stream = response.GetResponseStream();
-            StreamReader reader = new StreamReader(stream);
-            string data = reader.ReadToEnd();
-            response.Close();
+            string data;
+            using (Stream stream = response.GetResponseStream())
+            {
+                StreamReader reader = new StreamReader(stream);
+                data = reader.ReadToEnd();
+            }
             return data;
         }
 
